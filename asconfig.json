@@ -1,0 +1,31 @@
+{
+	"compilerOptions": {
+		"source-path": [
+			"src"
+		],
+		"output": "bin/Snooker.swf",
+		"default-frame-rate": 30,
+		"default-background-color": "#FFFFFF",
+		"default-size": {
+			"width": 1220,
+			"height": 580
+		},
+		"target-player": "11.4",
+		"swf-version": 18,
+		"accessible": false,
+		"benchmark": false,
+		"optimize": true,
+		"omit-trace-statements": false,
+		"show-unused-type-selector-warnings": true,
+		"strict": true,
+		"use-network": true,
+		"use-resource-bundle-metadata": true,
+		"warnings": true,
+		"verbose-stacktraces": false,
+		"static-link-runtime-shared-libraries": true
+	},
+	"files": [
+		"src/Main.as"
+	],
+	"additionalOptions": "-as3=true"
+}
