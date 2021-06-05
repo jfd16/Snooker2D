@@ -19,6 +19,7 @@ package snooker {
     import flash.text.TextFormat;
     import flash.text.TextFormatAlign;
     import flash.utils.getTimer;
+    import spark.primitives.Rect;
     
     public final class Game extends Sprite {
         
@@ -75,18 +76,23 @@ package snooker {
             /*34*/ "Frames to win:",
             /*35*/ "Start match",
         ];
+
+        private static const BUTTON_SINGLE_PLAYER: int = 0;
+        private static const BUTTON_TWO_PLAYER: int = 1;
+        private static const BUTTON_FIRST_FRAME_P1: int = 2;
+        private static const BUTTON_FIRST_FRAME_P2: int = 3;
+        private static const BUTTON_START_MATCH: int = 4;
         
         // These are the clickable areas (buttons) in the game's match options menu.
-        // Each button is defined as a rectangle stored in the array as a 4-tuple in the form (x,y,width,height)
-        // where (x,y) is the upper left corner. All coordinates are in the resolution-independent coordinate
-        // system.
+        // Each button is defined as a rectangle.
+        // All coordinates are in the resolution-independent coordinate system.
         // The button at index 'i' in this array is defined as the one whose x value is stored at index i*4.
-        private static var s_matchMenuButtonRanges: Vector.<Number> = new <Number>[
-            1125.0, 449.0, 26.0, 26.0,    // 0: Match mode - option 'Single player'
-            1396.0, 449.0, 26.0, 26.0,    // 1: Match mode - option 'Two player'
-            1125.0, 698.0, 26.0, 26.0,    // 2: First frame opening - option 'Player 1'
-            1396.0, 698.0, 26.0, 26.0,    // 3: First frame opening - option 'Player 2'
-            1125.0, 787.0, 256.0, 50.0,   // 4: Start match
+        private static var s_matchMenuButtonRanges: Vector.<Rectangle> = new <Rectangle>[
+            new Rectangle(1125.0, 449.0, 26.0, 26.0),    // 0: Match mode - option 'Single player'
+            new Rectangle(1396.0, 449.0, 26.0, 26.0),    // 1: Match mode - option 'Two player'
+            new Rectangle(1125.0, 698.0, 26.0, 26.0),    // 2: First frame opening - option 'Player 1'
+            new Rectangle(1396.0, 698.0, 26.0, 26.0),    // 3: First frame opening - option 'Player 2'
+            new Rectangle(1125.0, 787.0, 256.0, 50.0),   // 4: Start match
         ];
         
         // Text formats used for drawing text in the game.
@@ -153,7 +159,7 @@ package snooker {
         
         // The CPU player (for a single player game).
         private var m_cpuPlayer: CPUPlayer;
-        // True if single-player mdoe is enabled.
+        // True if single-player mode is enabled.
         private var m_isSinglePlayerGame: Boolean;
         
         // True when the CPU player is playing
@@ -455,9 +461,7 @@ package snooker {
         private function _onClick(evt: MouseEvent): void {
             if (m_matchMenuEnabled) {
                 // Handle clicks when the match options menu is engaged
-                var clickedButton: int = _getClickedMenuButton(mouseX, mouseY);
-                if (clickedButton !== -1)
-                    _handleMatchMenuButtonClick(clickedButton);
+                _handleMatchMenuButtonClick(_getClickedMenuButton(mouseX, mouseY));
                 return;
             }
             
@@ -849,19 +853,22 @@ package snooker {
          * @param clickedButton The index of the clicked button in the _buttonRanges array.
          */
         private function _handleMatchMenuButtonClick(clickedButton: int): void {
-            if (clickedButton === 0) {
+            if (clickedButton === -1)
+                return;
+
+            if (clickedButton === BUTTON_SINGLE_PLAYER) {
                 m_isSinglePlayerGame = true;
             }
-            else if (clickedButton === 1) {
+            else if (clickedButton === BUTTON_TWO_PLAYER) {
                 m_isSinglePlayerGame = false;
             }
-            else if (clickedButton === 2) {
+            else if (clickedButton === BUTTON_FIRST_FRAME_P1) {
                 m_engine.setFirstFrameOpenPlayer(0);
             }
-            else if (clickedButton === 3) {
+            else if (clickedButton === BUTTON_FIRST_FRAME_P2) {
                 m_engine.setFirstFrameOpenPlayer(1);
             }
-            else if (clickedButton === 4) {
+            else if (clickedButton === BUTTON_START_MATCH) {
                 m_playerName1 = m_menuInputField_pName1.text;
                 if (m_playerName1.length === 0)
                     m_playerName1 = "Player 1";
@@ -888,7 +895,7 @@ package snooker {
         private function _drawMatchMenu(): void {
             var rect: Rectangle = m_rectObject;
             var pt: Point = m_pointObject;
-            var buttonRanges: Vector.<Number> = s_matchMenuButtonRanges;
+            var buttonRanges: Vector.<Rectangle> = s_matchMenuButtonRanges;
             var rf: Number = m_resolutionFactor;
             
             // Draw the background.
@@ -904,19 +911,20 @@ package snooker {
             tempGraphics.clear();
             tempGraphics.beginFill(0x333333, 1);
             
-            var buttonIndex: Number;
+            var buttonRect: Rectangle;
+            var buttonRadius: Number = 7.0 * rf;
 
-            buttonIndex = m_isSinglePlayerGame ? 0 : 4;
+            buttonRect = buttonRanges[m_isSinglePlayerGame ? BUTTON_SINGLE_PLAYER : BUTTON_TWO_PLAYER];
             tempGraphics.drawCircle(
-                (buttonRanges[buttonIndex] + buttonRanges[int(buttonIndex + 2)] * 0.5) * rf, 
-                (buttonRanges[int(buttonIndex + 1)] + buttonRanges[int(buttonIndex + 3)] * 0.5) * rf,
-                7.0 * rf
+                (buttonRect.x + buttonRect.width * 0.5) * rf, 
+                (buttonRect.y + buttonRect.height * 0.5) * rf,
+                buttonRadius
             );
-            buttonIndex = (m_engine.firstFrameOpenPlayer === 1) ? 12 : 8;
+            buttonRect = buttonRanges[(m_engine.firstFrameOpenPlayer === 1) ? BUTTON_FIRST_FRAME_P2 : BUTTON_FIRST_FRAME_P1];
             tempGraphics.drawCircle(
-                (buttonRanges[buttonIndex] + buttonRanges[int(buttonIndex + 2)] * 0.5) * rf, 
-                (buttonRanges[int(buttonIndex + 1)] + buttonRanges[int(buttonIndex + 3)] * 0.5) * rf,
-                7.0 * rf
+                (buttonRect.x + buttonRect.width * 0.5) * rf, 
+                (buttonRect.y + buttonRect.height * 0.5) * rf,
+                buttonRadius
             );
             
             m_gameAreaBitmapData.draw(m_tempShape);
@@ -947,19 +955,18 @@ package snooker {
             var rfi: Number = 1 / m_resolutionFactor;
             clickX *= rfi;
             clickY *= rfi;
-            var ranges: Vector.<Number> = s_matchMenuButtonRanges;
+            
+            var ranges: Vector.<Rectangle> = s_matchMenuButtonRanges;
 
-            for (var i: int = 0, n: int = ranges.length; i < n; i += 4) {
-                var buttonX: Number = ranges[i], buttonY: Number = ranges[int(i + 1)];
-                if (clickX < buttonX || clickY < buttonY)
-                    continue;
-
-                buttonX += ranges[int(i + 2)];
-                buttonY += ranges[int(i + 3)];
-                if (clickX > buttonX || clickY > buttonY)
-                    continue;
-
-                return i >> 2;
+            for (var i: int = 0, n: int = ranges.length; i < n; i++) {
+                var buttonRect: Rectangle = ranges[i];
+                if (clickX >= buttonRect.x
+                    && clickY >= buttonRect.y
+                    && clickX <= buttonRect.x + buttonRect.width
+                    && clickY <= buttonRect.y + buttonRect.height)
+                {
+                    return i;
+                }
             }
 
             return -1;

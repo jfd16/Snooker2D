@@ -258,7 +258,6 @@ package snooker {
             }
             
             // Set the shot parameters to the game engine.
-            m_engine.setGameState(selectedCandidate.shotDirX);
             m_engine.setCueDir(selectedCandidate.shotDirX, selectedCandidate.shotDirY);
             m_engine.setBallInHandAfterFoul(false);
             m_engine.setCueBallSpeed(selectedCandidate.shotSpeed);
@@ -458,7 +457,7 @@ package snooker {
             rnd = Math.random();
             if (rnd < u0_speed) {
                 rnd = (rnd * two_over_u0_speed) - 1;
-                var speedScale: Number = (rnd < 0) ? speed_scale_negative : speed_scale_positive;
+                var speedScale: Number = (rnd < 0) ? -speed_scale_negative : speed_scale_positive;
 
                 shot.shotSpeed += speedScale * Math.pow(Math.abs(rnd), speed_exp) * shot.shotSpeed;
 
